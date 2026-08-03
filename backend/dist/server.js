@@ -24,7 +24,7 @@ const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
         origin: [
-            'https://cse.vercel.app',
+            'https://cse-frontend-isqa3muvk-harshitha2827.vercel.app',
         ],
         methods: ['GET', 'POST'],
         credentials: true,
