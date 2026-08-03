@@ -22,10 +22,21 @@ dotenv_1.default.config({ path: path_1.default.resolve(process.cwd(), '../.env')
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
-    cors: { origin: '*', methods: ['GET', 'POST'] },
+    cors: {
+        origin: [
+            'https://cse.vercel.app',
+        ],
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 // Middleware
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: [
+        'http://localhost:5173',
+    ],
+    credentials: true,
+}));
 app.use(express_1.default.json());
 // Ensure Database is connected for every request
 app.use(async (req, res, next) => {
