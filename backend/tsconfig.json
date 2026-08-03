@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "./dist",
+    "rootDir": "src",
+    "baseUrl": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": ["*"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@config/*": ["config/*"]
+    }
+  },
+  "include": ["src"]
+}

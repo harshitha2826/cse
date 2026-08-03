@@ -1,0 +1,25 @@
+{
+  "name": "community-skill-exchange",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write ."
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^9.0.0",
+    "prettier": "^3.2.5"
+  },
+  "dependencies": {
+    "mongodb": "^7.5.0"
+  }
+}

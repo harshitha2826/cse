@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@frontend/*": ["frontend/src/*"],
+      "@backend/*": ["backend/src/*"]
+    }
+  },
+  "include": ["frontend/src", "backend/src"]
+}

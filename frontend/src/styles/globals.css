@@ -1,0 +1,145 @@
+/* src/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Fonts & Base CSS Variables ── */
+@layer base {
+  :root {
+    --background: 210 20% 98%;          /* #f8fafc - Light off-white */
+    --foreground: 222 47% 11%;          /* #0f172a - Dark slate text */
+    --card: 0 0% 100%;                  /* #ffffff - Pure white card */
+    --card-foreground: 222 47% 11%;     /* #0f172a */
+    --surface: 210 20% 96%;             /* #f1f5f9 - Light surface fill */
+    --surface-dark: 217 33% 15%;        /* Fallback dark surface */
+    --border: 214 32% 91%;              /* #e2e8f0 - Subtle light border */
+    --border-dark: 217 19% 23%;         /* Fallback dark border */
+    --muted-foreground: 215 16% 45%;    /* #64748b - Muted text */
+    --primary: 173 80% 32%;             /* #0d9488 - Teal */
+    --primary-light: 168 76% 66%;
+    --primary-dark: 175 77% 26%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;           /* #030712 - Deep dark background */
+    --foreground: 210 40% 98%;          /* #f8fafc - Bright white text */
+    --card: 222 47% 11%;                /* #0f172a - Dark slate card */
+    --card-foreground: 210 40% 98%;     /* #f8fafc */
+    --surface: 217 33% 15%;             /* #1e293b - Dark surface */
+    --border: 217 19% 23%;              /* #334155 - Subtle dark border */
+    --muted-foreground: 215 20% 70%;    /* #94a3b8 - Readable muted text in dark mode */
+    --primary: 173 80% 40%;             /* Vibrant teal for dark mode */
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+}
+
+/* ── Custom Utilities ── */
+@layer utilities {
+  /* Glassmorphism */
+  .glass {
+    background-color: hsl(var(--card) / 0.85);
+    border: 1px solid hsl(var(--border));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 1rem;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Premium card glow */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(13, 148, 136, 0.25), 0 4px 30px rgba(0,0,0,0.1);
+  }
+  .glow-primary-hover:hover {
+    box-shadow: 0 0 40px rgba(13, 148, 136, 0.4), 0 8px 40px rgba(0,0,0,0.15);
+  }
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+  }
+
+  /* Animated gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #0d9488, #34d399, #06b6d4, #8b5cf6);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease infinite;
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.12) 50%,
+      transparent 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Active nav pill */
+  .nav-pill-active {
+    @apply bg-gradient-to-r from-primary to-emerald-500 text-white shadow-md;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Smooth scrolling ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(13, 148, 136, 0.35);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 148, 136, 0.6);
+}
+
+/* ── Input Focus Ring ── */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2), 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* ── Button Press Feedback ── */
+button:active, a:active {
+  transform: scale(0.97);
+}
+
+/* ── Selection Color ── */
+::selection {
+  background: rgba(13, 148, 136, 0.25);
+  color: inherit;
+}
