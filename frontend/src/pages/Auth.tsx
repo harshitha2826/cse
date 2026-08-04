@@ -353,10 +353,10 @@ const Auth: React.FC = () => {
                   disabled={isSubmitting}
                   whileHover={!isSubmitting ? { scale: 1.02 } : {}}
                   whileTap={!isSubmitting ? { scale: 0.98 } : {}}
-                  className={`w-full py-3.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all duration-200 ${
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 btn-glow-cyan cursor-pointer ${
                     isSubmitting
-                      ? 'bg-primary/60 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-primary to-emerald-500 hover:shadow-lg hover:shadow-primary/30'
+                      ? 'opacity-60 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-primary to-emerald-500 shadow-xl shadow-primary/30'
                   }`}
                 >
                   {isSubmitting ? (
@@ -369,7 +369,7 @@ const Auth: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
+                      <Sparkles className="w-4 h-4 text-emerald-300" />
                       {mode === 'login' ? 'Sign In' : 'Create Account – Free'}
                       <ArrowRight className="w-4 h-4" />
                     </>

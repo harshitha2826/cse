@@ -187,7 +187,7 @@ const Header: React.FC = () => {
               <Tooltip content="Register for a new SkillBridge account" position="bottom">
                 <Link
                   to="/auth/register"
-                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-emerald-500 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-primary/40 hover:scale-105 transition-all duration-200"
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-emerald-500 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-primary/40 hover:scale-105 transition-all duration-300 btn-glow-cyan"
                 >
                   <Sparkles className="w-3.5 h-3.5" /> Get Started
                 </Link>
