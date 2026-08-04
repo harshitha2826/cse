@@ -24,6 +24,7 @@ const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
     cors: {
         origin: [
+            'http://localhost:5173',
             'https://cse-frontend-two.vercel.app',
             'https://cse-frontend-isqa3muvk-harshitha2827.vercel.app',
         ],
@@ -34,6 +35,7 @@ const io = new socket_io_1.Server(httpServer, {
 // Middleware
 app.use((0, cors_1.default)({
     origin: [
+        'http://localhost:5173',
         'https://cse-frontend-two.vercel.app',
         'https://cse-frontend-isqa3muvk-harshitha2827.vercel.app',
     ],
