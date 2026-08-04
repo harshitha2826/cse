@@ -576,8 +576,12 @@ SkillBridge is built on a **peer-to-peer knowledge currency system**:
 4. **No Real Money**: Pure skill exchange powered by community collaboration.`;
       followUpSuggestions = ['Tell about me', 'Show me available skills in Marketplace', 'How do I post a skill listing?'];
     }
-    // K. Dynamic MongoDB Database Mentor Match
-    else if (dbMatchedSkills.length > 0 && /\b(teacher|mentor|instructor|who|find|list|skill|course|guitar|spanish|react|figma|python|music|website|platform)\b/i.test(qTrimmed)) {
+    // K. Dynamic MongoDB Database Mentor Match — only for explicit find/show/list mentor/teacher requests
+    else if (
+      dbMatchedSkills.length > 0 &&
+      /\b(find|show|list|recommend|suggest|search|browse|get|who (can|is|teaches)|looking for|need a|want a)\b/i.test(qTrimmed) &&
+      /\b(teacher|mentor|instructor|tutor|course|skill|class|lesson)\b/i.test(qTrimmed)
+    ) {
       answer = `🔍 **SkillBridge Marketplace Mentors & Listings for: "${qTrimmed}"**\n\nHere are matching community members and skill listings from our live database:\n\n`;
       dbMatchedSkills.forEach((s, idx) => {
         answer += `### 📌 ${idx + 1}. ${s.title}\n- **Instructor / Member**: ${s.userName || 'Community Member'}\n- **Category**: ${s.category} | **Proficiency Level**: ${s.proficiency}\n- **Cost**: ${s.cost || 10} Credits | **Mode**: ${s.mode || 'Both'}\n- **Details**: ${s.description}\n\n`;
@@ -585,23 +589,47 @@ SkillBridge is built on a **peer-to-peer knowledge currency system**:
       answer += `💡 You can click **"Propose Swap"** or view full details under the **Marketplace** tab on your dashboard!`;
       followUpSuggestions = ['Tell about me', 'How do I post a skill listing?', 'How do credits work?'];
     }
-    // L. Universal Structured ChatGPT Synthesizer for General Knowledge / Doubts
+    // L. Universal Structured Answer for General Knowledge / Doubts
     else {
-      answer = `💡 **Comprehensive Breakdown for: "${qTrimmed}"**
+      // Try to give a contextually useful answer based on the question
+      const isLearningQ = /\b(how (can|do|to)|what is|explain|learn|understand|what are|why|when|difference|compare|best way)\b/i.test(qTrimmed);
 
-### 📌 1. Core Overview
-**${qTrimmed}** is an essential subject. Here is a clear, structured explanation:
+      if (isLearningQ) {
+        answer = `### 💡 Answer for: "${qTrimmed}"
 
-- **Fundamental Concept**: Establishes core rules, definitions, and underlying context.
-- **Practical Application**: Applied in modern software engineering, academic research, or daily problem solving.
-- **Best Practices**: Focus on breaking down complex problems step-by-step for optimal results.
+Great question! Here's a clear breakdown:
 
-### 🚀 2. Next Steps to Deepen Understanding:
-1. Review foundational definitions and real-world examples.
-2. Practice step-by-step implementation.
-3. Connect with 1-on-1 mentors in the **SkillBridge Marketplace**!`;
+**Understanding the topic step by step:**
+- Start by grasping the **core concept** and why it matters in practice.
+- Break it down into **smaller, manageable parts** — each one building on the last.
+- Apply it with **hands-on practice**: small projects, exercises, or real examples go a long way.
 
-      followUpSuggestions = ['Tell about me', `Can you explain ${qTrimmed} with an example?`, `Find mentors for ${qTrimmed}`];
+**Recommended Learning Path:**
+1. **Theory first** — Read official documentation or a trusted tutorial.
+2. **Build something small** — Apply the concept in a mini project.
+3. **Get feedback** — Connect with a mentor on SkillBridge's Marketplace for personalised guidance!
+
+> 💬 *For a deeper, AI-powered answer on this topic, ask your administrator to add a **GEMINI_API_KEY** to the server environment variables — this enables real-time intelligent responses using Google Gemini AI.*`;
+
+        followUpSuggestions = [`Give me an example of ${qTrimmed}`, 'Find me a mentor for this', 'Tell about me'];
+      } else {
+        answer = `💡 **Here's what I found for: "${qTrimmed}"**
+
+I am SkillBridge AI, your 24/7 learning assistant. I can help you with:
+
+- 💻 **Coding**: React, JavaScript, Python, Node.js, SQL, and more
+- 📐 **Math & Science**: Algorithms, Data Structures, Physics, Calculus
+- 🎓 **Career Guidance**: Resumes, interview prep, learning roadmaps
+- 🤝 **SkillBridge Platform**: Credits, swaps, finding mentors
+
+Try asking something specific like:
+- *"What is async/await in JavaScript?"*
+- *"Explain React useEffect"*
+- *"Find me a Python mentor"*
+- *"How do credits work on SkillBridge?"*`;
+
+        followUpSuggestions = ['Tell about me', `Explain ${qTrimmed} with an example`, `Find mentors for ${qTrimmed}`];
+      }
     }
 
     return res.json({
