@@ -144,7 +144,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
                     {/* Progress pill if accepted or completed */}
                     {(swap.status === 'accepted' || swap.status === 'completed') && (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
-                        <BarChart2 className="w-3 h-3" /> Progress: {swap.progress || 0}% ({swap.progressStatus || 'In Progress'})
+                        <BarChart2 className="w-3 h-3" /> Progress: {typeof swap.progress === 'number' && swap.progress > 0 ? `${swap.progress}% (${swap.progressStatus || 'In Progress'})` : '0% (Not evaluated yet)'}
                       </span>
                     )}
                   </div>

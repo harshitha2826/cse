@@ -133,60 +133,31 @@ export const SkillProgressTracker: React.FC<SkillProgressTrackerProps> = ({ onNa
           id: s._id,
           title: s.title,
           category: s.category,
-          studentsEnrolled: 2 + i + swapsAccepted,
-          creditsEarned: (s.cost || 10) + 10 + swapsCompleted * 5,
+          studentsEnrolled: swapsAccepted,
+          creditsEarned: (s.cost || 10) + swapsCompleted * 10,
         }));
 
-        // ── Learning items: derive from accepted/completed swaps ─
-        // Use the partner's skills they accepted swaps for as "learning skills"
-        const acceptedSwapSkillIds = allSwaps
-          .filter((sw) => sw.status === 'accepted' || sw.status === 'completed')
-          .map((sw) => sw.requestedSkill || sw.offeredSkill)
-          .filter(Boolean);
+        // ── Learning items: fetch real accepted/completed swaps progress ─
+        const acceptedSwaps = allSwaps.filter(
+          (sw) => (sw.status === 'accepted' || sw.status === 'completed') && (sw.requester === user?.id || sw.provider === user?.id)
+        );
 
-        let learningFromSwaps: LearningSkill[] = [];
-        for (const skillId of acceptedSwapSkillIds.slice(0, 4)) {
-          const matched = allSkills.find((s: any) => s._id === skillId);
-          if (matched) {
-            const prog = deriveProgress(matched.proficiency, swapsAccepted, swapsCompleted);
-            learningFromSwaps.push({
-              id: matched._id,
-              title: matched.title,
-              category: matched.category,
-              proficiency: matched.proficiency,
-              progress: prog,
-              status: deriveStatus(prog),
-              teacherName: matched.userName || 'Community Mentor',
-              dateStarted: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            });
-          }
-        }
+        const learningFromSwaps: LearningSkill[] = acceptedSwaps.map((sw) => {
+          const isTeacher = sw.provider === user?.id;
+          const partnerName = isTeacher ? (sw.requesterName || 'Learner') : (sw.providerName || 'Teacher');
+          const skillTitle = sw.requestedSkillTitle || sw.offeredSkillTitle || 'Skill Swap';
 
-        // Fallback: show sample items if no swaps yet
-        if (learningFromSwaps.length === 0) {
-          learningFromSwaps = [
-            {
-              id: 'sample-1',
-              title: 'Full-Stack React & Node.js Mentorship',
-              category: 'Technology',
-              proficiency: 'Intermediate',
-              progress: 45,
-              status: 'In Progress',
-              teacherName: 'Alex Chen',
-              dateStarted: '2026-07-15',
-            },
-            {
-              id: 'sample-2',
-              title: 'UI/UX Mobile App Design with Figma',
-              category: 'Design',
-              proficiency: 'Beginner',
-              progress: 72,
-              status: 'Practicing',
-              teacherName: 'Sarah Jenkins',
-              dateStarted: '2026-07-20',
-            },
-          ];
-        }
+          return {
+            id: sw._id,
+            title: skillTitle,
+            category: 'Skill Swap',
+            proficiency: sw.progressStatus || 'In Progress',
+            progress: typeof sw.progress === 'number' ? sw.progress : 0,
+            status: sw.progressStatus || 'In Progress',
+            teacherName: isTeacher ? `Your Student: ${partnerName}` : `Teacher: ${partnerName}`,
+            dateStarted: new Date(sw.createdAt).toLocaleDateString(),
+          };
+        });
 
         // ── Overall progress stat ───────────────────────────
         const avg =
