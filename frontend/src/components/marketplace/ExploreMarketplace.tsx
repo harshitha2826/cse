@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { Tooltip } from '../ui/Tooltip';
-import { Search, Filter, Sparkles, User, Tag, Send, CheckCircle2, AlertCircle, Coins, Eye, MapPin, Globe, Compass } from 'lucide-react';
+import { Search, Filter, Sparkles, User, Tag, Send, CheckCircle2, AlertCircle, Coins, Eye, MapPin, Globe, Compass, BookOpen } from 'lucide-react';
 import { SkillDetailModal, Skill } from './SkillDetailModal';
 import { AISkillMatcher } from '../ai/AISkillMatcher';
 
@@ -186,12 +186,12 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
         </div>
       </div>
 
-      {/* AI Skill Matcher Panel */}
       {!loading && skills.length > 0 && (
         <AISkillMatcher
           skills={skills}
           onPropose={(skill: Skill) => {
             setSelectedSkill(skill);
+            setOnlyLearn(false);
             setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to propose a skill exchange with you.`);
           }}
         />
@@ -301,18 +301,35 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
                     </Tooltip>
 
                     {currentUser && currentUser.email !== (skill as any).userEmail && (
-                      <Tooltip content="Propose a direct 1-on-1 skill exchange for 0 credits" position="top" className="flex-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSkill(skill);
-                            setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to propose a skill exchange with you.`);
-                          }}
-                          className="w-full py-2 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:scale-102 transition-all duration-300 cursor-pointer btn-glow-teal"
-                        >
-                          <Send className="w-3.5 h-3.5" /> Propose Swap
-                        </button>
-                      </Tooltip>
+                      <>
+                        <Tooltip content="Propose a 1-on-1 skill exchange" position="top" className="flex-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedSkill(skill);
+                              setOnlyLearn(false);
+                              setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to propose a skill exchange with you.`);
+                            }}
+                            className="w-full py-2 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:scale-102 transition-all duration-300 cursor-pointer btn-glow-teal"
+                          >
+                            <Send className="w-3.5 h-3.5" /> Swap
+                          </button>
+                        </Tooltip>
+
+                        <Tooltip content="Propose to only learn this skill" position="top" className="flex-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedSkill(skill);
+                              setOnlyLearn(true);
+                              setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to learn this from you.`);
+                            }}
+                            className="w-full py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:scale-102 transition-all duration-300 cursor-pointer shadow-md"
+                          >
+                            <BookOpen className="w-3.5 h-3.5" /> Learn
+                          </button>
+                        </Tooltip>
+                      </>
                     )}
                   </div>
                 </div>
