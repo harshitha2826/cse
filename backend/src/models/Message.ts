@@ -16,6 +16,15 @@ export interface IMessage extends Document {
   createdAt: Date;
 }
 
+const AttachmentSchema = new Schema(
+  {
+    type: { type: String, enum: ['image', 'document', 'location', 'contact'] },
+    data: { type: String },
+    metadata: { type: Schema.Types.Mixed },
+  },
+  { _id: false }
+);
+
 const MessageSchema: Schema<IMessage> = new Schema(
   {
     sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -23,14 +32,7 @@ const MessageSchema: Schema<IMessage> = new Schema(
     swapRequestId: { type: Schema.Types.ObjectId, ref: 'SwapRequest' },
     senderName: { type: String },
     content: { type: String, required: true },
-    attachment: {
-      type: {
-        type: String,
-        enum: ['image', 'document', 'location', 'contact'],
-      },
-      data: { type: String },
-      metadata: { type: Schema.Types.Mixed },
-    },
+    attachment: AttachmentSchema,
     read: { type: Boolean, default: false },
   },
   { timestamps: true }
