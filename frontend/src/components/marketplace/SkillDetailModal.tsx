@@ -199,7 +199,8 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({
                   onClose();
                   onOpenSwap(skill);
                 }}
-                className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold rounded-xl border border-primary text-primary hover:bg-primary/10 transition-colors flex items-center justify-center gap-1.5"
+                className="btn-cyber flex-1 sm:flex-initial rounded-xl"
+                style={{ '--border-color': 'linear-gradient(-45deg, #0d9488, #34d399, #06b6d4)' } as any}
               >
                 <Send className="w-3.5 h-3.5" /> Swap Skill
               </button>
@@ -210,7 +211,8 @@ export const SkillDetailModal: React.FC<SkillDetailModalProps> = ({
                 type="button"
                 onClick={handleLearnSkill}
                 disabled={learning}
-                className="flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="btn-cyber flex-1 sm:flex-initial rounded-xl disabled:opacity-50"
+                style={{ '--border-color': 'linear-gradient(-45deg, #f59e0b, #fbbf24, #d97706)' } as any}
               >
                 <Coins className="w-4 h-4" />
                 {learning ? 'Processing...' : `Learn Skill (${cost} Credits)`}

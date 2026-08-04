@@ -112,7 +112,7 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
         <Tooltip content="Publish a new skill listing & earn +10 Credits" position="left">
           <button
             onClick={onPostClick}
-            className="px-4 py-2.5 bg-gradient-to-r from-primary to-emerald-500 text-white text-sm font-bold rounded-xl hover:scale-105 transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer btn-glow-cyan"
+            className="btn-cyber rounded-xl"
           >
             + Post a Skill (+10 Credits)
           </button>
@@ -310,7 +310,8 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
                               setOnlyLearn(false);
                               setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to propose a skill exchange with you.`);
                             }}
-                            className="w-full py-2 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:scale-102 transition-all duration-300 cursor-pointer btn-glow-teal"
+                            className="btn-cyber w-full rounded-xl"
+                            style={{ '--border-color': 'linear-gradient(-45deg, #0d9488, #34d399, #06b6d4)' } as any}
                           >
                             <Send className="w-3.5 h-3.5" /> Swap
                           </button>
@@ -324,7 +325,8 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
                               setOnlyLearn(true);
                               setProposalMsg(`Hi ${skill.userName || ''}! I noticed your listing for "${skill.title}" and would love to learn this from you.`);
                             }}
-                            className="w-full py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:scale-102 transition-all duration-300 cursor-pointer shadow-md"
+                            className="btn-cyber w-full rounded-xl"
+                            style={{ '--border-color': 'linear-gradient(-45deg, #3b82f6, #6366f1, #8b5cf6)' } as any}
                           >
                             <BookOpen className="w-3.5 h-3.5" /> Learn
                           </button>

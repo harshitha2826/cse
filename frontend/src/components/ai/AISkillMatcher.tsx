@@ -255,7 +255,8 @@ export const AISkillMatcher: React.FC<AISkillMatcherProps> = ({ skills, onPropos
 
                       <button
                         onClick={() => onPropose(match.skill)}
-                        className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-light hover:scale-105 transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                        className="btn-cyber rounded-xl"
+                        style={{ '--border-color': 'linear-gradient(-45deg, #a855f7, #d946ef, #8b5cf6)' } as any}
                       >
                         <Send className="w-3.5 h-3.5" /> Propose Swap
                       </button>
