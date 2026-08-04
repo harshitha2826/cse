@@ -35,12 +35,18 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 // src/models/Message.ts
 const mongoose_1 = __importStar(require("mongoose"));
+const AttachmentSchema = new mongoose_1.Schema({
+    type: { type: String, enum: ['image', 'document', 'location', 'contact'] },
+    data: { type: String },
+    metadata: { type: mongoose_1.Schema.Types.Mixed },
+}, { _id: false });
 const MessageSchema = new mongoose_1.Schema({
     sender: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     receiver: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     swapRequestId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'SwapRequest' },
     senderName: { type: String },
     content: { type: String, required: true },
+    attachment: AttachmentSchema,
     read: { type: Boolean, default: false },
 }, { timestamps: true });
 const Message = mongoose_1.default.model('Message', MessageSchema);

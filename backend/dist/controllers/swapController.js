@@ -31,7 +31,8 @@ const createSwapRequest = async (req, res) => {
             targetSkill = await Skill_1.default.findOne({ title: { $regex: new RegExp(searchTitle, 'i') } });
         }
         const requester = await User_1.default.findById(requesterId);
-        const providerId = targetSkill?.user || targetUserId || req.body.providerId;
+        const onlyLearn = !!req.body.onlyLearn;
+        const providerId = onlyLearn ? null : (targetSkill?.user || targetUserId || req.body.providerId);
         const provider = providerId ? await User_1.default.findById(providerId) : null;
         let offeredSkill = null;
         if (myOfferedSkillId) {
@@ -42,7 +43,7 @@ const createSwapRequest = async (req, res) => {
         }
         const swapRequest = new SwapRequest_1.default({
             requester: requesterId,
-            provider: providerId || requesterId,
+            provider: providerId,
             requesterName: requester?.name || 'Skill Exchanger',
             providerName: provider?.name || targetSkill?.userName || req.body.providerName || 'Community Member',
             offeredSkill: myOfferedSkillId || skillIdToUse || requesterId,
@@ -51,6 +52,7 @@ const createSwapRequest = async (req, res) => {
             requestedSkillTitle: targetSkill?.title || requestedSkillTitle || 'Skill Swap Proposal',
             message: message || `Hi! I would love to swap skills with you.`,
             status: 'pending',
+            isLearnerOnly: onlyLearn,
         });
         await swapRequest.save();
         return res.status(201).json({
@@ -95,15 +97,15 @@ const updateSwapStatus = async (req, res) => {
         if (!swap) {
             return res.status(404).json({ message: 'Swap request not found.' });
         }
-        // Verify user is requester or provider
-        if (swap.requester.toString() !== userId && swap.provider.toString() !== userId) {
+        // Verify user is requester or provider (provider may be null for learner‑only)
+        if (swap.requester.toString() !== userId && (swap.provider ? swap.provider.toString() !== userId : false)) {
             return res.status(403).json({ message: 'Unauthorized to modify this swap request.' });
         }
         const previousStatus = swap.status;
         swap.status = status;
         // ── TEACHER CREDIT REWARD SYSTEM ────────────────────────────────────
         // When swap is accepted (learner enrolled into course):
-        if (status === 'accepted' && previousStatus !== 'accepted') {
+        if (status === 'accepted' && previousStatus !== 'accepted' && !swap.isLearnerOnly) {
             const teacherId = swap.provider; // The teacher providing the skill course
             const teacher = await User_1.default.findById(teacherId);
             if (teacher) {
@@ -122,7 +124,7 @@ const updateSwapStatus = async (req, res) => {
             }
         }
         // When course is marked completed:
-        if (status === 'completed' && previousStatus !== 'completed') {
+        if (status === 'completed' && previousStatus !== 'completed' && !swap.isLearnerOnly) {
             const teacherId = swap.provider;
             const teacher = await User_1.default.findById(teacherId);
             if (teacher) {
@@ -162,8 +164,12 @@ const updateLearnerProgress = async (req, res) => {
             return res.status(404).json({ message: 'Swap request not found.' });
         }
         // Verify user is requester or provider in this swap
-        if (swap.requester.toString() !== userId && swap.provider.toString() !== userId) {
+        if (swap.requester.toString() !== userId && (swap.provider ? swap.provider.toString() !== userId : true)) {
             return res.status(403).json({ message: 'Unauthorized to modify learner progress.' });
+        }
+        // Disallow progress updates for learner-only swaps (no teacher)
+        if (!swap.provider) {
+            return res.status(400).json({ message: 'Cannot update progress for learner-only swap.' });
         }
         if (progress !== undefined) {
             swap.progress = Math.min(Math.max(Number(progress), 0), 100);

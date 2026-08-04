@@ -58,11 +58,10 @@ const SwapRequestSchema: Schema<ISwapRequest> = new Schema(
       },
     ],
     lastUpdatedByTeacher: { type: Date },
+    // New flag to indicate learner‑only swap
+    isLearnerOnly: { type: Boolean, default: false },
   },
-  { timestamps: true },
-  // New flag to indicate learner‑only swap
-  isLearnerOnly: { type: Boolean, default: false },
-
+  { timestamps: true }
 );
 
 const SwapRequest: Model<ISwapRequest> = mongoose.model<ISwapRequest>('SwapRequest', SwapRequestSchema);

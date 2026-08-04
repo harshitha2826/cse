@@ -31,7 +31,7 @@ exports.getMessages = getMessages;
 /** Send a new chat message */
 const sendMessage = async (req, res) => {
     try {
-        const { receiverId, content, swapRequestId } = req.body;
+        const { receiverId, content, swapRequestId, attachment } = req.body;
         const senderId = req.user?.id;
         if (!senderId) {
             return res.status(401).json({ message: 'Unauthorized' });
@@ -43,6 +43,7 @@ const sendMessage = async (req, res) => {
             senderName: sender?.name || 'User',
             swapRequestId,
             content,
+            attachment,
             read: false,
         });
         await message.save();

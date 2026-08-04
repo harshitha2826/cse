@@ -37,10 +37,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const SwapRequestSchema = new mongoose_1.Schema({
     requester: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
-    provider: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    provider: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }, // optional for learner‑only swaps
     requesterName: { type: String },
     providerName: { type: String },
-    offeredSkill: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Skill', required: true },
+    offeredSkill: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Skill' },
     requestedSkill: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Skill', required: true },
     offeredSkillTitle: { type: String },
     requestedSkillTitle: { type: String },
@@ -65,6 +65,8 @@ const SwapRequestSchema = new mongoose_1.Schema({
         },
     ],
     lastUpdatedByTeacher: { type: Date },
+    // New flag to indicate learner‑only swap
+    isLearnerOnly: { type: Boolean, default: false },
 }, { timestamps: true });
 const SwapRequest = mongoose_1.default.model('SwapRequest', SwapRequestSchema);
 exports.default = SwapRequest;

@@ -17,6 +17,7 @@ const skills_1 = __importDefault(require("./routes/skills"));
 const swaps_1 = __importDefault(require("./routes/swaps"));
 const messages_1 = __importDefault(require("./routes/messages"));
 const ai_1 = __importDefault(require("./routes/ai"));
+const teacher_1 = __importDefault(require("./routes/teacher"));
 const Message_1 = __importDefault(require("./models/Message"));
 dotenv_1.default.config();
 dotenv_1.default.config({ path: path_1.default.resolve(process.cwd(), '../.env') });
@@ -33,6 +34,7 @@ const io = new socket_io_1.Server(httpServer, {
         methods: ['GET', 'POST'],
         credentials: true,
     },
+    maxHttpBufferSize: 1e7, // 10MB limit for base64 attachments
 });
 // Middleware
 app.use((0, cors_1.default)({
@@ -44,7 +46,8 @@ app.use((0, cors_1.default)({
     ],
     credentials: true,
 }));
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(express_1.default.urlencoded({ limit: '10mb', extended: true }));
 // Ensure Database is connected for every request
 app.use(async (req, res, next) => {
     if (mongoose_1.default.connection.readyState !== 1) {
@@ -74,6 +77,7 @@ app.get('/', (req, res) => {
             swaps: '/api/swaps',
             messages: '/api/messages',
             ai: '/api/ai',
+            teacher: '/api/teacher',
         },
         database: mongoose_1.default.connection.readyState === 1 ? 'Connected to MongoDB' : 'Connecting to MongoDB...',
     });
@@ -87,6 +91,7 @@ app.use('/api/skills', skills_1.default);
 app.use('/api/swaps', swaps_1.default);
 app.use('/api/messages', messages_1.default);
 app.use('/api/ai', ai_1.default);
+app.use('/api/teacher', teacher_1.default);
 // Socket.io Real-time Chat
 io.on('connection', (socket) => {
     console.log('🔌 New client connected to Socket.io:', socket.id);
@@ -96,7 +101,7 @@ io.on('connection', (socket) => {
     });
     socket.on('send_message', async (data) => {
         try {
-            const { sender, receiver, senderName, content, swapRequestId, roomId } = data;
+            const { sender, receiver, senderName, content, swapRequestId, roomId, attachment } = data;
             // Validate required fields
             if (!sender || !receiver || !content) {
                 socket.emit('message_error', { error: 'Missing required fields: sender, receiver, content' });
@@ -108,6 +113,7 @@ io.on('connection', (socket) => {
                 senderName: senderName || 'User',
                 swapRequestId,
                 content,
+                attachment,
             });
             await newMessage.save();
             // Emit to the shared room (both users must have joined this room)
