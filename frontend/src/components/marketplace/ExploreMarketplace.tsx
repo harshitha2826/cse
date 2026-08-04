@@ -59,16 +59,18 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
     setSwapFeedback(null);
 
     try {
-      await api.post('/swaps', {
+      const res = await api.post('/swaps', {
+        targetSkillId: selectedSkill._id,
         skillId: selectedSkill._id,
         targetUserId: selectedSkill.user,
         offeredSkillTitle: 'Skill Exchange Proposal',
+        requestedSkillTitle: selectedSkill.title,
         message: proposalMsg || `Hi! I would love to swap skills regarding "${selectedSkill.title}".`,
       });
 
       setSwapFeedback({
         type: 'success',
-        message: 'Swap proposal sent successfully! Track it in your Swaps tab.',
+        message: res.data?.message || 'Proposal sent successfully!',
       });
 
       setTimeout(() => {

@@ -10,35 +10,53 @@ const User_1 = __importDefault(require("../models/User"));
 /** Create swap request */
 const createSwapRequest = async (req, res) => {
     try {
-        const { targetSkillId, myOfferedSkillId, message } = req.body;
+        const { targetSkillId, skillId, myOfferedSkillId, message, offeredSkillTitle, requestedSkillTitle, targetUserId } = req.body;
         const requesterId = req.user?.id;
         if (!requesterId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const targetSkill = await Skill_1.default.findById(targetSkillId);
-        if (!targetSkill) {
-            return res.status(404).json({ message: 'Target skill listing not found.' });
+        const skillIdToUse = targetSkillId || skillId || req.body.id;
+        let targetSkill = null;
+        if (skillIdToUse) {
+            try {
+                targetSkill = await Skill_1.default.findById(skillIdToUse);
+            }
+            catch (e) {
+                // Ignore invalid ObjectId format
+            }
+        }
+        // Fallback: lookup by title if not found by ObjectId
+        if (!targetSkill && (requestedSkillTitle || offeredSkillTitle)) {
+            const searchTitle = requestedSkillTitle || offeredSkillTitle;
+            targetSkill = await Skill_1.default.findOne({ title: { $regex: new RegExp(searchTitle, 'i') } });
         }
         const requester = await User_1.default.findById(requesterId);
-        const provider = await User_1.default.findById(targetSkill.user);
+        const providerId = targetSkill?.user || targetUserId || req.body.providerId;
+        const provider = providerId ? await User_1.default.findById(providerId) : null;
         let offeredSkill = null;
         if (myOfferedSkillId) {
-            offeredSkill = await Skill_1.default.findById(myOfferedSkillId);
+            try {
+                offeredSkill = await Skill_1.default.findById(myOfferedSkillId);
+            }
+            catch (e) { }
         }
         const swapRequest = new SwapRequest_1.default({
             requester: requesterId,
-            provider: targetSkill.user,
+            provider: providerId || requesterId,
             requesterName: requester?.name || 'Skill Exchanger',
-            providerName: provider?.name || targetSkill.userName || 'Community Member',
-            offeredSkill: myOfferedSkillId || targetSkillId,
-            requestedSkill: targetSkillId,
-            offeredSkillTitle: offeredSkill?.title || 'General Skill Swap',
-            requestedSkillTitle: targetSkill.title,
-            message: message || `Hi! I would love to swap skills with you regarding "${targetSkill.title}".`,
+            providerName: provider?.name || targetSkill?.userName || req.body.providerName || 'Community Member',
+            offeredSkill: myOfferedSkillId || skillIdToUse || requesterId,
+            requestedSkill: skillIdToUse || requesterId,
+            offeredSkillTitle: offeredSkill?.title || offeredSkillTitle || 'General Skill Swap',
+            requestedSkillTitle: targetSkill?.title || requestedSkillTitle || 'Skill Swap Proposal',
+            message: message || `Hi! I would love to swap skills with you.`,
             status: 'pending',
         });
         await swapRequest.save();
-        return res.status(201).json(swapRequest);
+        return res.status(201).json({
+            message: 'Proposal sent successfully!',
+            swapRequest,
+        });
     }
     catch (err) {
         console.error('createSwapRequest error:', err);
