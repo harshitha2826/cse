@@ -40,6 +40,7 @@ export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('marketplace');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [chatPartner, setChatPartner] = useState<{ partnerId: string; partnerName: string } | null>(null);
+  const [refreshMarketplaceKey, setRefreshMarketplaceKey] = useState(0);
 
   const tabs: TabItem[] = [
     {
@@ -201,7 +202,10 @@ export const Dashboard: React.FC = () => {
             transition={{ duration: 0.22, ease: 'easeOut' }}
           >
             {activeTab === 'marketplace' && (
-              <ExploreMarketplace onPostClick={() => setIsPostModalOpen(true)} />
+              <ExploreMarketplace 
+                onPostClick={() => setIsPostModalOpen(true)} 
+                refreshKey={refreshMarketplaceKey} 
+              />
             )}
 
             {activeTab === 'progress' && <SkillProgressTracker onNavigateMarketplace={() => setActiveTab('marketplace')} />}
@@ -286,6 +290,7 @@ export const Dashboard: React.FC = () => {
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
         onSkillAdded={() => {
+          setRefreshMarketplaceKey(prev => prev + 1);
           setActiveTab('marketplace');
         }}
       />

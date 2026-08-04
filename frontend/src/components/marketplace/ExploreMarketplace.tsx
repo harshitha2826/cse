@@ -6,11 +6,12 @@ import { Search, Filter, Sparkles, User, Tag, Send, CheckCircle2, AlertCircle, C
 import { SkillDetailModal, Skill } from './SkillDetailModal';
 import { AISkillMatcher } from '../ai/AISkillMatcher';
 
-interface Props {
+interface ExploreMarketplaceProps {
   onPostClick: () => void;
+  refreshKey?: number;
 }
 
-export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
+export const ExploreMarketplace: React.FC<ExploreMarketplaceProps> = ({ onPostClick, refreshKey = 0 }) => {
   const { user: currentUser } = useAuth();
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
 
   useEffect(() => {
     fetchSkills();
-  }, [category, modeFilter]);
+  }, [category, modeFilter, refreshKey]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
