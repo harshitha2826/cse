@@ -41,7 +41,6 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
   const [inputMsg, setInputMsg] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
-  const [attachment, setAttachment] = useState<ChatMessage['attachment'] | undefined>(undefined);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -115,6 +114,31 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const sendPayload = (contentStr: string, attach?: ChatMessage['attachment']) => {
+    if (!user) return;
+    const tempId = `temp_${Date.now()}_${Math.random()}`;
+    const optimisticMsg: ChatMessage = {
+      _tempId: tempId,
+      sender: user.id,
+      receiver: partnerId,
+      senderName: user.name,
+      content: contentStr || (attach ? 'Shared an attachment' : ''),
+      attachment: attach,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+
+    const payload = {
+      sender: user.id,
+      receiver: partnerId,
+      senderName: user.name,
+      content: optimisticMsg.content,
+      attachment: attach,
+      roomId,
+    };
+    socketRef.current?.emit('send_message', payload);
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'document') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -126,7 +150,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
 
     const reader = new FileReader();
     reader.onload = () => {
-      setAttachment({
+      sendPayload('', {
         type,
         data: reader.result as string,
         metadata: { filename: file.name, size: file.size }
@@ -144,7 +168,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setAttachment({
+        sendPayload('', {
           type: 'location',
           data: `${position.coords.latitude},${position.coords.longitude}`
         });
@@ -159,7 +183,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
   const handleShareContact = (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactName.trim() || !contactPhone.trim()) return;
-    setAttachment({
+    sendPayload('', {
       type: 'contact',
       data: contactName.trim(),
       metadata: { phone: contactPhone.trim() }
@@ -172,35 +196,9 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMsg.trim() && !attachment) return;
-    if (!user) return;
-
-    const tempId = `temp_${Date.now()}_${Math.random()}`;
-
-    // Optimistically add message to UI immediately
-    const optimisticMsg: ChatMessage = {
-      _tempId: tempId,
-      sender: user.id,
-      receiver: partnerId,
-      senderName: user.name,
-      content: inputMsg.trim() || (attachment ? 'Shared an attachment' : ''),
-      attachment,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimisticMsg]);
-
-    const payload = {
-      sender: user.id,
-      receiver: partnerId,
-      senderName: user.name,
-      content: optimisticMsg.content,
-      attachment,
-      roomId,
-    };
-
-    socketRef.current?.emit('send_message', payload);
+    if (!inputMsg.trim()) return;
+    sendPayload(inputMsg.trim());
     setInputMsg('');
-    setAttachment(undefined);
   };
 
   const formatTime = (iso?: string) => {
@@ -286,24 +284,6 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Attachment Preview */}
-      {attachment && (
-        <div className="px-4 py-2 border-t border-border bg-surface text-xs flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            {attachment.type === 'image' && <ImageIcon className="w-4 h-4 text-primary" />}
-            {attachment.type === 'document' && <FileText className="w-4 h-4 text-blue-500" />}
-            {attachment.type === 'location' && <MapPin className="w-4 h-4 text-red-500" />}
-            {attachment.type === 'contact' && <ContactIcon className="w-4 h-4 text-purple-500" />}
-            <span className="font-medium truncate max-w-[200px]">
-              {attachment.type === 'image' ? 'Image Attachment' : attachment.type === 'document' ? attachment.metadata?.filename : attachment.type === 'location' ? 'Live Location' : `Contact: ${attachment.data}`}
-            </span>
-          </div>
-          <button type="button" onClick={() => setAttachment(undefined)} className="text-muted-foreground hover:text-red-500 transition-colors p-1">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       {/* Input Form */}
       <form onSubmit={handleSend} className="p-3 border-t border-gray-200 dark:border-gray-800 flex gap-2 items-end relative">
         <div className="relative">
@@ -346,7 +326,7 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
         />
         <button
           type="submit"
-          disabled={!inputMsg.trim() && !attachment}
+          disabled={!inputMsg.trim()}
           className="px-4 h-[36px] bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 flex items-center justify-center"
         >
           <Send className="w-3.5 h-3.5" />
