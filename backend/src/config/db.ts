@@ -19,11 +19,7 @@ export const connectDB = async () => {
     return; // Already connected
   }
 
-  const MONGO_URI = process.env.MONGO_URI;
-
-  if (!MONGO_URI) {
-    throw new Error('❌ MONGO_URI environment variable is not set. Please configure it in Railway.');
-  }
+  const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://Harshitha:Harshi26@cluster0.bbjpxts.mongodb.net/skillbridge?retryWrites=true&w=majority&appName=Cluster0';
 
   console.log('⏳ Connecting to MongoDB Atlas...');
   await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 });
