@@ -39,10 +39,7 @@ export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('marketplace');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [chatPartner, setChatPartner] = useState<{ partnerId: string; partnerName: string }>({
-    partnerId: '6a6b72bd9d844061aa44c9ef',
-    partnerName: 'SkillBridge Community Mentor',
-  });
+  const [chatPartner, setChatPartner] = useState<{ partnerId: string; partnerName: string } | null>(null);
 
   const tabs: TabItem[] = [
     {
@@ -219,7 +216,25 @@ export const Dashboard: React.FC = () => {
             )}
 
             {activeTab === 'chat' && (
-              <LiveChat partnerId={chatPartner.partnerId} partnerName={chatPartner.partnerName} />
+              chatPartner ? (
+                <LiveChat partnerId={chatPartner.partnerId} partnerName={chatPartner.partnerName} />
+              ) : (
+                <div className="glass rounded-xl border border-border p-12 flex flex-col items-center justify-center gap-4 text-center">
+                  <MessageSquare className="w-12 h-12 text-primary/40" />
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground mb-1">No Chat Partner Selected</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      Go to the <strong>Swaps</strong> tab, accept a swap request, and click <strong>Open Chat</strong> to start messaging your skill partner.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('swaps')}
+                    className="px-5 py-2 bg-gradient-to-r from-primary to-emerald-500 text-white text-sm font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity"
+                  >
+                    Go to Swaps →
+                  </button>
+                </div>
+              )
             )}
 
             {activeTab === 'leaderboard' && <Leaderboard />}

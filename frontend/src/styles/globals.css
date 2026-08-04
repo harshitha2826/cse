@@ -93,6 +93,43 @@
     @apply bg-gradient-to-r from-primary to-emerald-500 text-white shadow-md;
     box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
   }
+
+  /* ── Glowing Reflective Buttons ── */
+  .btn-glow-cyan {
+    background-color: rgb(14, 14, 26);
+    color: rgb(234, 234, 234);
+    box-shadow: 0px 0px 35px rgba(31, 215, 232, 0.35);
+    -webkit-box-reflect: below 6px linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.35));
+  }
+  .btn-glow-cyan:hover {
+    background: linear-gradient(270deg, rgba(2, 29, 78, 0.85) 0%, rgba(31, 215, 232, 0.95) 60%);
+    color: rgb(4, 4, 38);
+    box-shadow: 0px 0px 55px rgba(31, 215, 232, 0.65);
+  }
+
+  .btn-glow-teal {
+    background-color: rgb(13, 30, 28);
+    color: rgb(234, 250, 248);
+    box-shadow: 0px 0px 35px rgba(13, 148, 136, 0.4);
+    -webkit-box-reflect: below 6px linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.35));
+  }
+  .btn-glow-teal:hover {
+    background: linear-gradient(270deg, rgba(13, 148, 136, 0.9) 0%, rgba(52, 211, 153, 0.95) 65%);
+    color: rgb(3, 30, 25);
+    box-shadow: 0px 0px 55px rgba(52, 211, 153, 0.7);
+  }
+
+  .btn-glow-amber {
+    background-color: rgb(30, 20, 10);
+    color: rgb(254, 243, 199);
+    box-shadow: 0px 0px 35px rgba(245, 158, 11, 0.4);
+    -webkit-box-reflect: below 6px linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.35));
+  }
+  .btn-glow-amber:hover {
+    background: linear-gradient(270deg, rgba(180, 83, 9, 0.9) 0%, rgba(251, 191, 36, 0.95) 65%);
+    color: rgb(30, 15, 0);
+    box-shadow: 0px 0px 55px rgba(251, 191, 36, 0.7);
+  }
 }
 
 /* ── Keyframes ── */

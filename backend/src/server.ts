@@ -24,6 +24,7 @@ const io = new SocketIOServer(httpServer, {
   cors: {
     origin: [
       'http://localhost:5173',
+      'http://localhost:5174',
       'https://cse-frontend-two.vercel.app',
       'https://cse-frontend-isqa3muvk-harshitha2827.vercel.app',
     ],
@@ -37,6 +38,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
+      'http://localhost:5174',
       'https://cse-frontend-two.vercel.app',
       'https://cse-frontend-isqa3muvk-harshitha2827.vercel.app',
     ],
@@ -103,6 +105,13 @@ io.on('connection', (socket) => {
   socket.on('send_message', async (data) => {
     try {
       const { sender, receiver, senderName, content, swapRequestId, roomId } = data;
+
+      // Validate required fields
+      if (!sender || !receiver || !content) {
+        socket.emit('message_error', { error: 'Missing required fields: sender, receiver, content' });
+        return;
+      }
+
       const newMessage = new Message({
         sender,
         receiver,
@@ -112,10 +121,18 @@ io.on('connection', (socket) => {
       });
       await newMessage.save();
 
-      // Emit to room
-      io.to(roomId || receiver).emit('receive_message', newMessage);
+      // Emit to the shared room (both users must have joined this room)
+      if (roomId) {
+        io.to(roomId).emit('receive_message', newMessage);
+      }
+
+      // Also emit directly to any socket of the receiver
+      // (catches cases where receiver is in room under a different socket connection)
+      const senderSockets = await io.in(roomId || '').fetchSockets();
+      console.log(`📨 Message saved & emitted to room "${roomId}" — ${senderSockets.length} sockets in room`);
     } catch (err) {
       console.error('Socket send_message error:', err);
+      socket.emit('message_error', { error: 'Failed to send message' });
     }
   });
 

@@ -1,7 +1,8 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Button } from '../components/common/Button';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import {
   Sparkles, ArrowRight, Users, BookOpen, Repeat, Bot,
@@ -66,6 +67,7 @@ const itemVariants = {
 
 // ── Component ─────────────────────────────────────────────────
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ skills: 0, users: 0, swaps: 0 });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -174,22 +176,22 @@ const Home: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.35 }}
           className="flex flex-col sm:flex-row items-center gap-3 mb-16"
         >
-          <Link
-            to="/auth/register"
+          <button
+            onClick={() => navigate('/auth/register')}
             className="group relative px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl text-base shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-200 flex items-center gap-2 overflow-hidden"
           >
             <span className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
             <Sparkles className="w-5 h-5" />
             Join Free – Get 100 Credits
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <Link
-            to="/auth"
+          </button>
+          <button
+            onClick={() => navigate('/auth')}
             className="group px-8 py-4 border border-border text-foreground font-semibold rounded-2xl text-base hover:bg-surface hover:border-primary/50 hover:text-primary transition-all duration-200 flex items-center gap-2"
           >
             <Play className="w-4 h-4 group-hover:text-primary transition-colors" />
             Sign In
-          </Link>
+          </button>
         </motion.div>
 
         {/* Stats */}
@@ -447,23 +449,23 @@ const Home: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/auth/register"
-              className="group relative px-10 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl text-base shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-200 flex items-center gap-2 overflow-hidden"
+            <button
+              onClick={() => navigate('/auth/register')}
+              className="group relative px-8 py-4 bg-gradient-to-r from-primary to-emerald-500 text-white font-bold rounded-2xl text-base shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-200 flex items-center gap-2 overflow-hidden"
             >
               <span className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
               <Sparkles className="w-5 h-5" />
-              Get Started for Free
+              Join Free – Get 100 Credits
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              to="/dashboard"
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
               className="group px-10 py-4 border border-border font-semibold rounded-2xl text-base hover:bg-surface hover:border-primary/40 hover:text-primary transition-all duration-200 flex items-center gap-2"
             >
               <Zap className="w-4 h-4 text-primary" />
               Explore Dashboard
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            </button>
           </div>
 
           {/* Social proof strip */}

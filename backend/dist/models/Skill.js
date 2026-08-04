@@ -45,10 +45,18 @@ const SkillSchema = new mongoose_1.Schema({
     },
     type: { type: String, enum: ['offered', 'wanted'], required: true },
     proficiency: { type: String, enum: ['Beginner', 'Intermediate', 'Expert'], default: 'Intermediate' },
+    mode: { type: String, enum: ['Online', 'Offline', 'Both'], default: 'Both' },
+    location: {
+        address: { type: String },
+        city: { type: String },
+        lat: { type: Number },
+        lng: { type: Number },
+    },
     user: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     userName: { type: String },
     userEmail: { type: String },
     tags: [{ type: String }],
+    cost: { type: Number, default: 0 },
 }, { timestamps: true });
 const Skill = mongoose_1.default.model('Skill', SkillSchema);
 exports.default = Skill;

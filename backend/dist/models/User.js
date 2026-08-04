@@ -45,6 +45,7 @@ const UserSchema = new mongoose_1.Schema({
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
+    credits: { type: Number, default: 100 },
 }, { timestamps: true });
 // Hash password before save
 UserSchema.pre('save', async function (next) {
