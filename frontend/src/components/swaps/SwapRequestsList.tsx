@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { RefreshCw, Check, X, MessageSquare, Award, Clock } from 'lucide-react';
+import { RefreshCw, Check, X, MessageSquare, Award, Clock, BarChart2 } from 'lucide-react';
+import { LearnerProgressModal, SwapProgressData } from './LearnerProgressModal';
 
 interface SwapRequestItem {
   _id: string;
@@ -13,6 +14,10 @@ interface SwapRequestItem {
   requestedSkillTitle?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   message: string;
+  progress?: number;
+  progressStatus?: 'In Progress' | 'Practicing' | 'Mastered';
+  teacherNotes?: string;
+  milestones?: any[];
   createdAt: string;
 }
 
@@ -21,6 +26,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
   const [swaps, setSwaps] = useState<SwapRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
+  const [selectedProgressSwap, setSelectedProgressSwap] = useState<SwapProgressData | null>(null);
 
   const fetchSwaps = async () => {
     setLoading(true);
@@ -58,12 +64,12 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
         <div>
           <h2 className="text-2xl font-bold text-primary">Skill Swap Proposals</h2>
           <p className="text-sm text-foreground opacity-80">
-            Manage your skill exchange proposals and track exchange status.
+            Manage your skill exchange proposals, track status, and evaluate learner progress.
           </p>
         </div>
         <button
           onClick={fetchSwaps}
-          className="p-2 border rounded-lg hover:bg-surface text-foreground transition-colors self-start sm:self-auto flex items-center gap-1.5 text-xs font-medium"
+          className="p-2 border rounded-lg hover:bg-surface text-foreground transition-colors self-start sm:self-auto flex items-center gap-1.5 text-xs font-medium cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Refresh
         </button>
@@ -73,7 +79,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
       <div className="flex border-b border-gray-200 dark:border-gray-800">
         <button
           onClick={() => setActiveTab('incoming')}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'incoming'
               ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-foreground'
@@ -83,7 +89,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
         </button>
         <button
           onClick={() => setActiveTab('outgoing')}
-          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
             activeTab === 'outgoing'
               ? 'border-primary text-primary'
               : 'border-transparent text-gray-500 hover:text-foreground'
@@ -108,72 +114,111 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
           {displayedSwaps.map((swap) => {
             const partnerId = swap.requester === user?.id ? swap.provider : swap.requester;
             const partnerName = swap.requester === user?.id ? (swap.providerName || 'Partner') : (swap.requesterName || 'Partner');
+            const isTeacher = swap.provider === user?.id;
 
             return (
               <div
                 key={swap._id}
                 className="glass rounded-xl p-5 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         swap.status === 'accepted'
-                          ? 'bg-green-100 text-green-700 border border-green-300'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                           : swap.status === 'completed'
-                          ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                          ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30'
                           : swap.status === 'rejected'
-                          ? 'bg-red-100 text-red-700 border border-red-300'
-                          : 'bg-amber-100 text-amber-700 border border-amber-300'
+                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                          : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                       }`}
                     >
                       {swap.status}
                     </span>
+
                     <span className="text-xs font-semibold text-foreground">
                       Target Skill: {swap.requestedSkillTitle || 'Skill Swap'}
                     </span>
+
+                    {/* Progress pill if accepted or completed */}
+                    {(swap.status === 'accepted' || swap.status === 'completed') && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+                        <BarChart2 className="w-3 h-3" /> Progress: {swap.progress || 0}% ({swap.progressStatus || 'In Progress'})
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-sm text-foreground">
                     <strong className="text-primary">{partnerName}</strong>: "{swap.message}"
                   </p>
-                  <p className="text-[11px] text-gray-400">
+
+                  {swap.teacherNotes && (
+                    <div className="p-2.5 bg-surface border border-border rounded-xl text-xs text-muted-foreground">
+                      <strong className="text-purple-400">Teacher Notes:</strong> "{swap.teacherNotes}"
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-muted-foreground">
                     Requested on: {new Date(swap.createdAt).toLocaleDateString()}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   {swap.status === 'pending' && swap.provider === user?.id && (
                     <>
                       <button
                         onClick={() => handleStatusUpdate(swap._id, 'accepted')}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <Check className="w-3.5 h-3.5" /> Accept
                       </button>
                       <button
                         onClick={() => handleStatusUpdate(swap._id, 'rejected')}
-                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors"
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" /> Reject
                       </button>
                     </>
                   )}
 
-                  {swap.status === 'accepted' && (
+                  {(swap.status === 'accepted' || swap.status === 'completed') && (
                     <>
                       <button
                         onClick={() => onOpenChat(partnerId, partnerName)}
-                        className="px-3 py-1.5 bg-primary hover:bg-primary-light text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors"
+                        className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <MessageSquare className="w-3.5 h-3.5" /> Live Chat
                       </button>
+
+                      {/* Dedicated Teacher Progress Assessment Button */}
                       <button
-                        onClick={() => handleStatusUpdate(swap._id, 'completed')}
-                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors"
+                        onClick={() =>
+                          setSelectedProgressSwap({
+                            _id: swap._id,
+                            learnerName: isTeacher ? (swap.requesterName || 'Learner') : (swap.providerName || 'Teacher'),
+                            skillTitle: swap.requestedSkillTitle || 'Skill Swap',
+                            progress: swap.progress || 0,
+                            progressStatus: swap.progressStatus || 'In Progress',
+                            teacherNotes: swap.teacherNotes || '',
+                            milestones: swap.milestones || [],
+                            isTeacherView: isTeacher,
+                          })
+                        }
+                        className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 text-white rounded-md text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
                       >
-                        <Award className="w-3.5 h-3.5" /> Complete Swap
+                        <BarChart2 className="w-3.5 h-3.5" />
+                        {isTeacher ? 'Update Learner Progress 📊' : 'View Roadmap & Feedback 📊'}
                       </button>
+
+                      {swap.status === 'accepted' && (
+                        <button
+                          onClick={() => handleStatusUpdate(swap._id, 'completed')}
+                          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Award className="w-3.5 h-3.5" /> Complete Swap
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -182,6 +227,15 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
           })}
         </div>
       )}
+
+      {/* Progress Management Modal */}
+      <LearnerProgressModal
+        isOpen={!!selectedProgressSwap}
+        onClose={() => setSelectedProgressSwap(null)}
+        swapData={selectedProgressSwap}
+        onProgressUpdated={fetchSwaps}
+      />
     </div>
   );
 };
+

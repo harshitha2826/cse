@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSwapStatus = exports.getUserSwaps = exports.createSwapRequest = void 0;
+exports.updateLearnerProgress = exports.updateSwapStatus = exports.getUserSwaps = exports.createSwapRequest = void 0;
 const SwapRequest_1 = __importDefault(require("../models/SwapRequest"));
 const Skill_1 = __importDefault(require("../models/Skill"));
 const User_1 = __importDefault(require("../models/User"));
@@ -109,3 +109,59 @@ const updateSwapStatus = async (req, res) => {
     }
 };
 exports.updateSwapStatus = updateSwapStatus;
+/** Teacher update learner progress & milestones */
+const updateLearnerProgress = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { progress, progressStatus, teacherNotes, milestones } = req.body;
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        const swap = await SwapRequest_1.default.findById(id);
+        if (!swap) {
+            return res.status(404).json({ message: 'Swap request not found.' });
+        }
+        // Verify user is requester or provider in this swap
+        if (swap.requester.toString() !== userId && swap.provider.toString() !== userId) {
+            return res.status(403).json({ message: 'Unauthorized to modify learner progress.' });
+        }
+        if (progress !== undefined) {
+            swap.progress = Math.min(Math.max(Number(progress), 0), 100);
+            if (swap.progress >= 90)
+                swap.progressStatus = 'Mastered';
+            else if (swap.progress >= 50)
+                swap.progressStatus = 'Practicing';
+            else
+                swap.progressStatus = 'In Progress';
+        }
+        if (progressStatus && ['In Progress', 'Practicing', 'Mastered'].includes(progressStatus)) {
+            swap.progressStatus = progressStatus;
+        }
+        if (teacherNotes !== undefined) {
+            swap.teacherNotes = teacherNotes;
+        }
+        if (Array.isArray(milestones)) {
+            swap.milestones = milestones.map((m) => ({
+                title: String(m.title || '').trim(),
+                completed: Boolean(m.completed),
+                completedAt: m.completed ? m.completedAt || new Date() : undefined,
+            }));
+        }
+        swap.lastUpdatedByTeacher = new Date();
+        // Automatically mark swap as completed if progress is set to 100%
+        if (swap.progress === 100 && swap.status !== 'completed') {
+            swap.status = 'completed';
+        }
+        await swap.save();
+        return res.json({
+            message: 'Learner progress updated successfully!',
+            swap,
+        });
+    }
+    catch (err) {
+        console.error('updateLearnerProgress error:', err);
+        return res.status(500).json({ message: 'Failed to update learner progress.' });
+    }
+};
+exports.updateLearnerProgress = updateLearnerProgress;

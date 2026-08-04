@@ -1,6 +1,12 @@
 // src/models/SwapRequest.ts
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
+export interface IMilestone {
+  title: string;
+  completed: boolean;
+  completedAt?: Date;
+}
+
 export interface ISwapRequest extends Document {
   requester: mongoose.Types.ObjectId;
   provider: mongoose.Types.ObjectId;
@@ -12,6 +18,11 @@ export interface ISwapRequest extends Document {
   requestedSkillTitle?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'completed';
   message: string;
+  progress?: number;
+  progressStatus?: 'In Progress' | 'Practicing' | 'Mastered';
+  teacherNotes?: string;
+  milestones?: IMilestone[];
+  lastUpdatedByTeacher?: Date;
   createdAt: Date;
 }
 
@@ -31,6 +42,21 @@ const SwapRequestSchema: Schema<ISwapRequest> = new Schema(
       default: 'pending',
     },
     message: { type: String, required: true },
+    progress: { type: Number, default: 0, min: 0, max: 100 },
+    progressStatus: {
+      type: String,
+      enum: ['In Progress', 'Practicing', 'Mastered'],
+      default: 'In Progress',
+    },
+    teacherNotes: { type: String, default: '' },
+    milestones: [
+      {
+        title: { type: String, required: true },
+        completed: { type: Boolean, default: false },
+        completedAt: { type: Date },
+      },
+    ],
+    lastUpdatedByTeacher: { type: Date },
   },
   { timestamps: true }
 );

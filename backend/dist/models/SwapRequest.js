@@ -50,6 +50,21 @@ const SwapRequestSchema = new mongoose_1.Schema({
         default: 'pending',
     },
     message: { type: String, required: true },
+    progress: { type: Number, default: 0, min: 0, max: 100 },
+    progressStatus: {
+        type: String,
+        enum: ['In Progress', 'Practicing', 'Mastered'],
+        default: 'In Progress',
+    },
+    teacherNotes: { type: String, default: '' },
+    milestones: [
+        {
+            title: { type: String, required: true },
+            completed: { type: Boolean, default: false },
+            completedAt: { type: Date },
+        },
+    ],
+    lastUpdatedByTeacher: { type: Date },
 }, { timestamps: true });
 const SwapRequest = mongoose_1.default.model('SwapRequest', SwapRequestSchema);
 exports.default = SwapRequest;

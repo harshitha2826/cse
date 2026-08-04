@@ -9,4 +9,5 @@ router.use(authMiddleware_1.authenticateToken);
 router.get('/', swapController_1.getUserSwaps);
 router.post('/', swapController_1.createSwapRequest);
 router.patch('/:id/status', swapController_1.updateSwapStatus);
+router.patch('/:id/progress', swapController_1.updateLearnerProgress);
 exports.default = router;
