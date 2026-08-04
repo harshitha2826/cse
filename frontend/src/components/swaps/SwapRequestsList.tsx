@@ -22,7 +22,7 @@ interface SwapRequestItem {
 }
 
 export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partnerName: string) => void }> = ({ onOpenChat }) => {
-  const { user } = useAuth();
+  const { user, updateUserCredits } = useAuth();
   const [swaps, setSwaps] = useState<SwapRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
@@ -46,7 +46,18 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
-      await api.patch(`/swaps/${id}/status`, { status });
+      const res = await api.patch(`/swaps/${id}/status`, { status });
+      if (status === 'accepted') {
+        // Teacher gains +10 credits for student enrollment
+        if (user?.credits !== undefined && updateUserCredits) {
+          updateUserCredits((user.credits || 100) + 10);
+        }
+      } else if (status === 'completed') {
+        // Teacher gains +15 completion bonus credits
+        if (user?.credits !== undefined && updateUserCredits) {
+          updateUserCredits((user.credits || 100) + 15);
+        }
+      }
       fetchSwaps();
     } catch (err) {
       console.error('Failed to update status:', err);

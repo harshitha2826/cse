@@ -107,9 +107,52 @@ export const updateSwapStatus = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Unauthorized to modify this swap request.' });
     }
 
+    const previousStatus = swap.status;
     swap.status = status;
+
+    // ── TEACHER CREDIT REWARD SYSTEM ────────────────────────────────────
+    // When swap is accepted (learner enrolled into course):
+    if (status === 'accepted' && previousStatus !== 'accepted') {
+      const teacherId = swap.provider; // The teacher providing the skill course
+      const teacher = await User.findById(teacherId);
+
+      if (teacher) {
+        let skillCost = 10;
+        if (swap.requestedSkill) {
+          try {
+            const skill = await Skill.findById(swap.requestedSkill);
+            if (skill?.cost) skillCost = skill.cost;
+          } catch (e) {}
+        }
+
+        teacher.credits = (teacher.credits ?? 100) + skillCost;
+        await teacher.save();
+        console.log(`🎉 Teacher ${teacher.name} earned +${skillCost} credits for student enrollment! New balance: ${teacher.credits}`);
+      }
+    }
+
+    // When course is marked completed:
+    if (status === 'completed' && previousStatus !== 'completed') {
+      const teacherId = swap.provider;
+      const teacher = await User.findById(teacherId);
+
+      if (teacher) {
+        const bonus = 15;
+        teacher.credits = (teacher.credits ?? 100) + bonus;
+        await teacher.save();
+        console.log(`🏆 Teacher ${teacher.name} earned +${bonus} completion bonus credits! New balance: ${teacher.credits}`);
+      }
+    }
+
     await swap.save();
-    return res.json(swap);
+    return res.json({
+      message: status === 'accepted'
+        ? 'Swap accepted! Teacher earned credits for student enrollment.'
+        : status === 'completed'
+        ? 'Swap completed! Teacher earned +15 completion bonus credits.'
+        : `Status updated to ${status}`,
+      swap,
+    });
   } catch (err: any) {
     console.error('updateSwapStatus error:', err);
     return res.status(500).json({ message: 'Failed to update swap status.' });
