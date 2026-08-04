@@ -48,13 +48,21 @@ app.use(express.json());
 // Ensure Database is connected for every request
 app.use(async (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
-    await connectDB();
+    try {
+      await connectDB();
+    } catch (err: any) {
+      console.error('DB connection error on request:', err.message);
+      return res.status(503).json({ error: 'Database unavailable. Check MONGO_URI in Railway variables.' });
+    }
   }
   next();
 });
 
 // Connect to MongoDB on startup
-connectDB();
+connectDB().catch((err) => {
+  console.error('❌ Startup DB connection failed:', err.message);
+  console.error('👉 Set MONGO_URI in Railway: https://railway.app → your service → Variables');
+});
 
 // Root Welcome & Health Check Route
 app.get('/', (req, res) => {
