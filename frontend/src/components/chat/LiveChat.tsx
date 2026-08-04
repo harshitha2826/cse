@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { Send, MessageSquare, User, CheckCheck } from 'lucide-react';
+import { Send, MessageSquare, User, CheckCheck, Paperclip, Image as ImageIcon, FileText, MapPin, Contact as ContactIcon, X } from 'lucide-react';
 
 interface LiveChatProps {
   partnerId: string;
@@ -15,6 +15,11 @@ interface ChatMessage {
   receiver: string;
   senderName?: string;
   content: string;
+  attachment?: {
+    type: 'image' | 'document' | 'location' | 'contact';
+    data: string;
+    metadata?: any;
+  };
   createdAt?: string;
   _tempId?: string; // for optimistic messages
 }
@@ -35,8 +40,16 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [attachment, setAttachment] = useState<ChatMessage['attachment'] | undefined>(undefined);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const docInputRef = useRef<HTMLInputElement | null>(null);
 
   // Deterministic room: sort both IDs alphabetically
   const roomId = [user?.id, partnerId].sort().join('_');
@@ -102,9 +115,65 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'document') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size exceeds 5MB limit');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAttachment({
+        type,
+        data: reader.result as string,
+        metadata: { filename: file.name, size: file.size }
+      });
+      setShowAttachMenu(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset input
+  };
+
+  const handleShareLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setAttachment({
+          type: 'location',
+          data: `${position.coords.latitude},${position.coords.longitude}`
+        });
+        setShowAttachMenu(false);
+      },
+      () => {
+        alert('Unable to retrieve your location. Please check browser permissions.');
+      }
+    );
+  };
+
+  const handleShareContact = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactPhone.trim()) return;
+    setAttachment({
+      type: 'contact',
+      data: contactName.trim(),
+      metadata: { phone: contactPhone.trim() }
+    });
+    setShowContactModal(false);
+    setShowAttachMenu(false);
+    setContactName('');
+    setContactPhone('');
+  };
+
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMsg.trim() || !user) return;
+    if (!inputMsg.trim() && !attachment) return;
+    if (!user) return;
 
     const tempId = `temp_${Date.now()}_${Math.random()}`;
 
@@ -114,7 +183,8 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
       sender: user.id,
       receiver: partnerId,
       senderName: user.name,
-      content: inputMsg.trim(),
+      content: inputMsg.trim() || (attachment ? 'Shared an attachment' : ''),
+      attachment,
       createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimisticMsg]);
@@ -123,12 +193,14 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
       sender: user.id,
       receiver: partnerId,
       senderName: user.name,
-      content: inputMsg.trim(),
+      content: optimisticMsg.content,
+      attachment,
       roomId,
     };
 
     socketRef.current?.emit('send_message', payload);
     setInputMsg('');
+    setAttachment(undefined);
   };
 
   const formatTime = (iso?: string) => {
@@ -178,7 +250,30 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
                   {!isMe && msg.senderName && (
                     <p className="text-[10px] font-bold text-primary mb-0.5">{msg.senderName}</p>
                   )}
-                  <p>{msg.content}</p>
+                  {msg.attachment && (
+                    <div className="mb-2 max-w-full">
+                      {msg.attachment.type === 'image' && (
+                        <img src={msg.attachment.data} alt="attachment" className="max-w-full h-auto rounded-lg max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity border border-border" onClick={() => window.open(msg.attachment!.data, '_blank')} />
+                      )}
+                      {msg.attachment.type === 'document' && (
+                        <a href={msg.attachment.data} download={msg.attachment.metadata?.filename} className={`flex items-center gap-2 p-2.5 rounded-lg text-xs font-semibold ${isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-primary/10 text-primary hover:bg-primary/20'} transition-colors border border-current/10`}>
+                          <FileText className="w-4 h-4 shrink-0" /> <span className="truncate">{msg.attachment.metadata?.filename || 'Document'}</span>
+                        </a>
+                      )}
+                      {msg.attachment.type === 'location' && (
+                        <a href={`https://maps.google.com/?q=${msg.attachment.data}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2.5 rounded-lg text-xs font-semibold ${isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'} transition-colors border border-current/10`}>
+                          <MapPin className="w-4 h-4 shrink-0" /> <span className="truncate">View Live Location</span>
+                        </a>
+                      )}
+                      {msg.attachment.type === 'contact' && (
+                        <div className={`flex flex-col gap-1 p-2.5 rounded-lg text-xs border border-current/10 ${isMe ? 'bg-white/20 text-white' : 'bg-purple-500/10 text-purple-700 dark:text-purple-400'}`}>
+                          <div className="flex items-center gap-1.5 font-bold"><ContactIcon className="w-4 h-4 shrink-0" /> <span className="truncate">{msg.attachment.data}</span></div>
+                          <div className="opacity-90 pl-5.5 truncate">{msg.attachment.metadata?.phone}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {msg.content && msg.content !== 'Shared an attachment' && <p>{msg.content}</p>}
                   <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
                     <span className="text-[9px] opacity-60">{formatTime(msg.createdAt)}</span>
                     {isMe && !isOptimistic && <CheckCheck className="w-3 h-3 opacity-60" />}
@@ -191,24 +286,95 @@ export const LiveChat: React.FC<LiveChatProps> = ({ partnerId, partnerName }) =>
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Attachment Preview */}
+      {attachment && (
+        <div className="px-4 py-2 border-t border-border bg-surface text-xs flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {attachment.type === 'image' && <ImageIcon className="w-4 h-4 text-primary" />}
+            {attachment.type === 'document' && <FileText className="w-4 h-4 text-blue-500" />}
+            {attachment.type === 'location' && <MapPin className="w-4 h-4 text-red-500" />}
+            {attachment.type === 'contact' && <ContactIcon className="w-4 h-4 text-purple-500" />}
+            <span className="font-medium truncate max-w-[200px]">
+              {attachment.type === 'image' ? 'Image Attachment' : attachment.type === 'document' ? attachment.metadata?.filename : attachment.type === 'location' ? 'Live Location' : `Contact: ${attachment.data}`}
+            </span>
+          </div>
+          <button type="button" onClick={() => setAttachment(undefined)} className="text-muted-foreground hover:text-red-500 transition-colors p-1">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Input Form */}
-      <form onSubmit={handleSend} className="p-3 border-t border-gray-200 dark:border-gray-800 flex gap-2">
+      <form onSubmit={handleSend} className="p-3 border-t border-gray-200 dark:border-gray-800 flex gap-2 items-end relative">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowAttachMenu(!showAttachMenu)}
+            className="h-[36px] w-[36px] flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors border border-transparent hover:border-primary/20"
+          >
+            <Paperclip className="w-4 h-4" />
+          </button>
+          {showAttachMenu && (
+            <div className="absolute bottom-full left-0 mb-2 w-48 bg-card border border-border shadow-xl rounded-xl p-2 z-50 flex flex-col gap-1">
+              <button type="button" onClick={() => { imageInputRef.current?.click(); setShowAttachMenu(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-surface rounded-lg text-left font-medium">
+                <ImageIcon className="w-3.5 h-3.5 text-primary" /> Image / Media
+              </button>
+              <button type="button" onClick={() => { docInputRef.current?.click(); setShowAttachMenu(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-surface rounded-lg text-left font-medium">
+                <FileText className="w-3.5 h-3.5 text-blue-500" /> Document (PDF)
+              </button>
+              <button type="button" onClick={handleShareLocation} className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-surface rounded-lg text-left font-medium">
+                <MapPin className="w-3.5 h-3.5 text-red-500" /> Live Location
+              </button>
+              <button type="button" onClick={() => { setShowContactModal(true); setShowAttachMenu(false); }} className="flex items-center gap-2 w-full px-3 py-2 text-xs hover:bg-surface rounded-lg text-left font-medium">
+                <ContactIcon className="w-3.5 h-3.5 text-purple-500" /> Contact Share
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {/* Hidden File Inputs */}
+        <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'image')} />
+        <input type="file" ref={docInputRef} accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => handleFileUpload(e, 'document')} />
+
         <input
           type="text"
           placeholder="Type a message..."
           value={inputMsg}
           onChange={(e) => setInputMsg(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) handleSend(e as any); }}
-          className="flex-1 px-3 py-2 border border-border rounded-lg bg-background outline-none focus:ring-2 focus:ring-primary text-xs"
+          className="flex-1 px-3 py-2 border border-border rounded-lg bg-background outline-none focus:ring-2 focus:ring-primary text-xs h-[36px]"
         />
         <button
           type="submit"
-          disabled={!inputMsg.trim()}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 flex items-center justify-center"
+          disabled={!inputMsg.trim() && !attachment}
+          className="px-4 h-[36px] bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 flex items-center justify-center"
         >
           <Send className="w-3.5 h-3.5" />
         </button>
       </form>
+
+      {/* Contact Share Modal */}
+      {showContactModal && (
+        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleShareContact} className="bg-card border border-border p-5 rounded-2xl shadow-xl w-full max-w-sm">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2"><ContactIcon className="w-4 h-4 text-purple-500" /> Share Contact</h3>
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="block text-xs font-medium mb-1">Name</label>
+                <input type="text" autoFocus required value={contactName} onChange={(e) => setContactName(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. John Doe" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Phone Number</label>
+                <input type="tel" required value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-sm outline-none focus:ring-2 focus:ring-primary" placeholder="+1 234 567 8900" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-surface rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-4 py-2 text-xs font-bold bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors shadow-md">Share</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

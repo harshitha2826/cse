@@ -7,6 +7,11 @@ export interface IMessage extends Document {
   swapRequestId?: mongoose.Types.ObjectId;
   senderName?: string;
   content: string;
+  attachment?: {
+    type: 'image' | 'document' | 'location' | 'contact';
+    data: string;
+    metadata?: any;
+  };
   read: boolean;
   createdAt: Date;
 }
@@ -18,6 +23,14 @@ const MessageSchema: Schema<IMessage> = new Schema(
     swapRequestId: { type: Schema.Types.ObjectId, ref: 'SwapRequest' },
     senderName: { type: String },
     content: { type: String, required: true },
+    attachment: {
+      type: {
+        type: String,
+        enum: ['image', 'document', 'location', 'contact'],
+      },
+      data: { type: String },
+      metadata: { type: Schema.Types.Mixed },
+    },
     read: { type: Boolean, default: false },
   },
   { timestamps: true }
