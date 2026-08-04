@@ -14,42 +14,20 @@ try {
   // ignore if custom DNS fails
 }
 
-let mongoMemoryServerInstance: any = null;
-
 export const connectDB = async () => {
   if (mongoose.connection.readyState === 1) {
     return; // Already connected
   }
 
-  const MONGO_URI = process.env.MONGO_URI || '';
+  const MONGO_URI = process.env.MONGO_URI;
 
-  if (MONGO_URI) {
-    try {
-      console.log('⏳ Connecting to MongoDB Atlas...');
-      await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 });
-      console.log('🗄️  MongoDB Atlas connected successfully!');
-      return;
-    } catch (err: any) {
-      console.warn('⚠️ Could not connect to MongoDB Atlas:', err.message);
-      console.log('🔄 Falling back to local in-memory MongoDB database...');
-      try {
-        await mongoose.disconnect();
-      } catch (_) {}
-    }
+  if (!MONGO_URI) {
+    throw new Error('❌ MONGO_URI environment variable is not set. Please configure it in Railway.');
   }
 
-  // Fallback to MongoMemoryServer for zero-config local development
-  try {
-    if (!mongoMemoryServerInstance) {
-      const { MongoMemoryServer } = await import('mongodb-memory-server');
-      mongoMemoryServerInstance = await MongoMemoryServer.create();
-    }
-    const memoryUri = mongoMemoryServerInstance.getUri();
-    await mongoose.connect(memoryUri);
-    console.log('🗄️  Local in-memory MongoDB connected successfully!');
-  } catch (memErr: any) {
-    console.error('❌ Failed to connect to in-memory database:', memErr.message);
-  }
+  console.log('⏳ Connecting to MongoDB Atlas...');
+  await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+  console.log('🗄️  MongoDB Atlas connected successfully!');
 };
 
 export default connectDB;
