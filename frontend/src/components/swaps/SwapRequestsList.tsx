@@ -3,6 +3,7 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { RefreshCw, Check, X, MessageSquare, Award, Clock, BarChart2 } from 'lucide-react';
 import { LearnerProgressModal, SwapProgressData } from './LearnerProgressModal';
+import { CertificateModal, CertificateData } from '../common/CertificateModal';
 
 interface SwapRequestItem {
   _id: string;
@@ -27,6 +28,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
   const [selectedProgressSwap, setSelectedProgressSwap] = useState<SwapProgressData | null>(null);
+  const [selectedCert, setSelectedCert] = useState<CertificateData | null>(null);
 
   const fetchSwaps = async () => {
     setLoading(true);
@@ -126,6 +128,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
             const partnerId = swap.requester === user?.id ? swap.provider : swap.requester;
             const partnerName = swap.requester === user?.id ? (swap.providerName || 'Partner') : (swap.requesterName || 'Partner');
             const isTeacher = swap.provider === user?.id;
+            const isCompleted = swap.status === 'completed' || (swap.progress !== undefined && swap.progress >= 100);
 
             return (
               <div
@@ -151,13 +154,6 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
                     <span className="text-xs font-semibold text-foreground">
                       Target Skill: {swap.requestedSkillTitle || 'Skill Swap'}
                     </span>
-
-                    {/* Progress pill if accepted or completed */}
-                    {(swap.status === 'accepted' || swap.status === 'completed') && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
-                        <BarChart2 className="w-3 h-3" /> Progress: {typeof swap.progress === 'number' && swap.progress > 0 ? `${swap.progress}% (${swap.progressStatus || 'In Progress'})` : '0% (Not evaluated yet)'}
-                      </span>
-                    )}
                   </div>
 
                   <p className="text-sm text-foreground">
@@ -222,6 +218,25 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
                         {isTeacher ? 'Update Learner Progress 📊' : 'View Roadmap & Feedback 📊'}
                       </button>
 
+                      {/* Verified Certificate Button */}
+                      {isCompleted && (
+                        <button
+                          onClick={() =>
+                            setSelectedCert({
+                              learnerName: swap.requesterName || user?.name || 'Learner Exchanger',
+                              teacherName: swap.providerName || 'SkillBridge Mentor',
+                              skillTitle: swap.requestedSkillTitle || 'Skill Exchange Mastery',
+                              completedDate: new Date().toLocaleDateString(),
+                              certId: `SB-CERT-${swap._id.slice(-6).toUpperCase()}`,
+                            })
+                          }
+                          className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:opacity-90 text-black font-extrabold rounded-md text-xs flex items-center gap-1 transition-all cursor-pointer shadow-md"
+                        >
+                          <Award className="w-3.5 h-3.5 text-black" />
+                          🎓 Verified Certificate
+                        </button>
+                      )}
+
                       {swap.status === 'accepted' && (
                         <button
                           onClick={() => handleStatusUpdate(swap._id, 'completed')}
@@ -246,7 +261,13 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
         swapData={selectedProgressSwap}
         onProgressUpdated={fetchSwaps}
       />
+
+      {/* Verified Certificate Modal */}
+      <CertificateModal
+        isOpen={!!selectedCert}
+        onClose={() => setSelectedCert(null)}
+        data={selectedCert}
+      />
     </div>
   );
 };
-

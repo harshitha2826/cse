@@ -13,6 +13,7 @@ import skillsRouter from './routes/skills';
 import swapsRouter from './routes/swaps';
 import messagesRouter from './routes/messages';
 import aiRouter from './routes/ai';
+import teacherRouter from './routes/teacher';
 import Message from './models/Message';
 
 dotenv.config();
@@ -77,6 +78,7 @@ app.get('/', (req, res) => {
       swaps: '/api/swaps',
       messages: '/api/messages',
       ai: '/api/ai',
+      teacher: '/api/teacher',
     },
     database: mongoose.connection.readyState === 1 ? 'Connected to MongoDB' : 'Connecting to MongoDB...',
   });
@@ -92,6 +94,7 @@ app.use('/api/skills', skillsRouter);
 app.use('/api/swaps', swapsRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/teacher', teacherRouter);
 
 // Socket.io Real-time Chat
 io.on('connection', (socket) => {

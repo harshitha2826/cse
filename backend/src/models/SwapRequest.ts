@@ -9,7 +9,7 @@ export interface IMilestone {
 
 export interface ISwapRequest extends Document {
   requester: mongoose.Types.ObjectId;
-  provider: mongoose.Types.ObjectId;
+  provider?: mongoose.Types.ObjectId;
   requesterName?: string;
   providerName?: string;
   offeredSkill: mongoose.Types.ObjectId;
@@ -24,15 +24,16 @@ export interface ISwapRequest extends Document {
   milestones?: IMilestone[];
   lastUpdatedByTeacher?: Date;
   createdAt: Date;
+  isLearnerOnly?: boolean;
 }
 
 const SwapRequestSchema: Schema<ISwapRequest> = new Schema(
   {
     requester: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    provider: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    provider: { type: Schema.Types.ObjectId, ref: 'User' }, // optional for learner‑only swaps
     requesterName: { type: String },
     providerName: { type: String },
-    offeredSkill: { type: Schema.Types.ObjectId, ref: 'Skill', required: true },
+    offeredSkill: { type: Schema.Types.ObjectId, ref: 'Skill' },
     requestedSkill: { type: Schema.Types.ObjectId, ref: 'Skill', required: true },
     offeredSkillTitle: { type: String },
     requestedSkillTitle: { type: String },
@@ -58,7 +59,10 @@ const SwapRequestSchema: Schema<ISwapRequest> = new Schema(
     ],
     lastUpdatedByTeacher: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
+  // New flag to indicate learner‑only swap
+  isLearnerOnly: { type: Boolean, default: false },
+
 );
 
 const SwapRequest: Model<ISwapRequest> = mongoose.model<ISwapRequest>('SwapRequest', SwapRequestSchema);

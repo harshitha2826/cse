@@ -20,6 +20,7 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [detailSkill, setDetailSkill] = useState<Skill | null>(null);
   const [proposalMsg, setProposalMsg] = useState('');
+  const [onlyLearn, setOnlyLearn] = useState(false);
   const [submittingSwap, setSubmittingSwap] = useState(false);
   const [swapFeedback, setSwapFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -66,6 +67,7 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
         offeredSkillTitle: 'Skill Exchange Proposal',
         requestedSkillTitle: selectedSkill.title,
         message: proposalMsg || `Hi! I would love to swap skills regarding "${selectedSkill.title}".`,
+        onlyLearn: onlyLearn,
       });
 
       setSwapFeedback({
@@ -360,11 +362,25 @@ export const ExploreMarketplace: React.FC<Props> = ({ onPostClick }) => {
                   className="w-full bg-surface border border-border rounded-xl p-3 text-xs text-foreground placeholder-muted-foreground outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
-
+              <div className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  id="onlyLearn"
+                  checked={onlyLearn}
+                  onChange={(e) => setOnlyLearn(e.target.checked)}
+                  className="mr-2 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label htmlFor="onlyLearn" className="text-sm text-foreground">
+                  Only learn (don’t teach)
+                </label>
+              </div>
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => setSelectedSkill(null)}
+                  onClick={() => {
+                    setSelectedSkill(null);
+                    setOnlyLearn(false);
+                  }}
                   className="px-4 py-2 bg-surface hover:bg-surface/80 border border-border text-foreground font-semibold text-xs rounded-xl transition-colors cursor-pointer"
                 >
                   Cancel

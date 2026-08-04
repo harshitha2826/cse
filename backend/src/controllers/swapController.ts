@@ -33,7 +33,8 @@ export const createSwapRequest = async (req: AuthRequest, res: Response) => {
     }
 
     const requester = await User.findById(requesterId);
-    const providerId = targetSkill?.user || targetUserId || req.body.providerId;
+    const onlyLearn = !!req.body.onlyLearn;
+    const providerId = onlyLearn ? null : (targetSkill?.user || targetUserId || req.body.providerId);
     const provider = providerId ? await User.findById(providerId) : null;
 
     let offeredSkill = null;
@@ -45,7 +46,7 @@ export const createSwapRequest = async (req: AuthRequest, res: Response) => {
 
     const swapRequest = new SwapRequest({
       requester: requesterId,
-      provider: providerId || requesterId,
+      provider: providerId,
       requesterName: requester?.name || 'Skill Exchanger',
       providerName: provider?.name || targetSkill?.userName || req.body.providerName || 'Community Member',
       offeredSkill: myOfferedSkillId || skillIdToUse || requesterId,
@@ -54,6 +55,7 @@ export const createSwapRequest = async (req: AuthRequest, res: Response) => {
       requestedSkillTitle: targetSkill?.title || requestedSkillTitle || 'Skill Swap Proposal',
       message: message || `Hi! I would love to swap skills with you.`,
       status: 'pending',
+      isLearnerOnly: onlyLearn,
     });
 
     await swapRequest.save();
@@ -102,8 +104,8 @@ export const updateSwapStatus = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Swap request not found.' });
     }
 
-    // Verify user is requester or provider
-    if (swap.requester.toString() !== userId && swap.provider.toString() !== userId) {
+    // Verify user is requester or provider (provider may be null for learner‑only)
+    if (swap.requester.toString() !== userId && (swap.provider ? swap.provider.toString() !== userId : false)) {
       return res.status(403).json({ message: 'Unauthorized to modify this swap request.' });
     }
 
@@ -112,7 +114,7 @@ export const updateSwapStatus = async (req: AuthRequest, res: Response) => {
 
     // ── TEACHER CREDIT REWARD SYSTEM ────────────────────────────────────
     // When swap is accepted (learner enrolled into course):
-    if (status === 'accepted' && previousStatus !== 'accepted') {
+    if (status === 'accepted' && previousStatus !== 'accepted' && !swap.isLearnerOnly) {
       const teacherId = swap.provider; // The teacher providing the skill course
       const teacher = await User.findById(teacherId);
 
@@ -132,7 +134,7 @@ export const updateSwapStatus = async (req: AuthRequest, res: Response) => {
     }
 
     // When course is marked completed:
-    if (status === 'completed' && previousStatus !== 'completed') {
+    if (status === 'completed' && previousStatus !== 'completed' && !swap.isLearnerOnly) {
       const teacherId = swap.provider;
       const teacher = await User.findById(teacherId);
 
@@ -176,8 +178,12 @@ export const updateLearnerProgress = async (req: AuthRequest, res: Response) => 
     }
 
     // Verify user is requester or provider in this swap
-    if (swap.requester.toString() !== userId && swap.provider.toString() !== userId) {
+    if (swap.requester.toString() !== userId && (swap.provider ? swap.provider.toString() !== userId : true)) {
       return res.status(403).json({ message: 'Unauthorized to modify learner progress.' });
+    }
+    // Disallow progress updates for learner-only swaps (no teacher)
+    if (!swap.provider) {
+      return res.status(400).json({ message: 'Cannot update progress for learner-only swap.' });
     }
 
     if (progress !== undefined) {
