@@ -107,7 +107,7 @@ io.on('connection', (socket) => {
 
   socket.on('send_message', async (data) => {
     try {
-      const { sender, receiver, senderName, content, swapRequestId, roomId } = data;
+      const { sender, receiver, senderName, content, swapRequestId, roomId, attachment } = data;
 
       // Validate required fields
       if (!sender || !receiver || !content) {
@@ -121,6 +121,7 @@ io.on('connection', (socket) => {
         senderName: senderName || 'User',
         swapRequestId,
         content,
+        attachment,
       });
       await newMessage.save();
 

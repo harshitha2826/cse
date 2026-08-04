@@ -31,7 +31,7 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
 /** Send a new chat message */
 export const sendMessage = async (req: AuthRequest, res: Response) => {
   try {
-    const { receiverId, content, swapRequestId } = req.body;
+    const { receiverId, content, swapRequestId, attachment } = req.body;
     const senderId = req.user?.id;
 
     if (!senderId) {
@@ -46,6 +46,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
       senderName: sender?.name || 'User',
       swapRequestId,
       content,
+      attachment,
       read: false,
     });
 
