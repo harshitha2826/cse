@@ -15,9 +15,9 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
   ...props
 }) => {
   const sizeClasses = {
-    sm: 'px-4 py-2 text-xs rounded-lg',
-    md: 'px-6 py-3 text-sm rounded-xl',
-    lg: 'px-8 py-4 text-base rounded-xl',
+    sm: 'px-6 py-3 text-xs rounded-lg',
+    md: 'px-8 py-4 text-sm rounded-xl',
+    lg: 'px-10 py-5 text-base rounded-xl',
   };
 
   const variantClasses = {
