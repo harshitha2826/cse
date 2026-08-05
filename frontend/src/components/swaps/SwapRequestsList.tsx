@@ -219,7 +219,7 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
                       </button>
 
                       {/* Verified Certificate Button */}
-                      {isCompleted && (
+                      {swap.status === 'completed' && swap.progress === 100 && (
                         <button
                           onClick={() =>
                             setSelectedCert({
