@@ -52,10 +52,11 @@ const Header: React.FC = () => {
           {/* ── Logo ── */}
           <Tooltip content="Go to SkillBridge Landing Page" position="bottom">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center shadow-md group-hover:shadow-primary/40 transition-shadow duration-300">
-                <Zap className="w-5 h-5 text-white" fill="white" />
-                <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="SkillBridge Logo" 
+                className="w-10 h-10 rounded-xl shadow-sm group-hover:shadow-primary/40 transition-all duration-300"
+              />
               <span className="text-xl font-black tracking-tight" style={{ fontFamily: 'Outfit, Inter, sans-serif' }}>
                 <span className="text-primary">Skill</span>
                 <span className="text-foreground">Bridge</span>
