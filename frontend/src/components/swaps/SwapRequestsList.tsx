@@ -49,17 +49,16 @@ export const SwapRequestsList: React.FC<{ onOpenChat: (partnerId: string, partne
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
       const res = await api.patch(`/swaps/${id}/status`, { status });
-      if (status === 'accepted') {
-        // Teacher gains +10 credits for student enrollment
-        if (user?.credits !== undefined && updateUserCredits) {
-          updateUserCredits((user.credits || 100) + 10);
-        }
-      } else if (status === 'completed') {
-        // Teacher gains +15 completion bonus credits
-        if (user?.credits !== undefined && updateUserCredits) {
-          updateUserCredits((user.credits || 100) + 15);
+      
+      // Update global user credits dynamically based on backend response
+      if (updateUserCredits) {
+        if (res.data.teacherCredits !== undefined && user?.id === res.data.swap?.provider) {
+          updateUserCredits(res.data.teacherCredits);
+        } else if (res.data.learnerCredits !== undefined && user?.id === res.data.swap?.requester) {
+          updateUserCredits(res.data.learnerCredits);
         }
       }
+      
       fetchSwaps();
     } catch (err) {
       console.error('Failed to update status:', err);

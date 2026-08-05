@@ -112,48 +112,82 @@ export const updateSwapStatus = async (req: AuthRequest, res: Response) => {
     const previousStatus = swap.status;
     swap.status = status;
 
-    // ── TEACHER CREDIT REWARD SYSTEM ────────────────────────────────────
-    // When swap is accepted (learner enrolled into course):
-    if (status === 'accepted' && previousStatus !== 'accepted' && !swap.isLearnerOnly) {
-      const teacherId = swap.provider; // The teacher providing the skill course
-      const teacher = await User.findById(teacherId);
+    // ── CREDIT EXCHANGE SYSTEM ────────────────────────────────────
+    // When swap is accepted (enrollment):
+    if (status === 'accepted' && previousStatus !== 'accepted') {
+      const teacherId = swap.provider;
+      const learnerId = swap.requester;
+      
+      if (teacherId && learnerId) {
+        const teacher = await User.findById(teacherId);
+        const learner = await User.findById(learnerId);
 
-      if (teacher) {
-        let skillCost = 10;
-        if (swap.requestedSkill) {
-          try {
-            const skill = await Skill.findById(swap.requestedSkill);
-            if (skill?.cost) skillCost = skill.cost;
-          } catch (e) {}
+        if (teacher && learner) {
+          let reqSkillCost = 10;
+          if (swap.requestedSkill) {
+            try {
+              const skill = await Skill.findById(swap.requestedSkill);
+              if (skill?.cost) reqSkillCost = skill.cost;
+            } catch (e) {}
+          }
+
+          // Learner pays teacher for the requested skill
+          learner.credits = Math.max(0, (learner.credits ?? 100) - reqSkillCost);
+          teacher.credits = (teacher.credits ?? 100) + reqSkillCost;
+
+          // If it's a 2-way swap, teacher pays learner for the offered skill
+          if (!swap.isLearnerOnly && swap.offeredSkill) {
+            let offSkillCost = 10;
+            try {
+              const skill = await Skill.findById(swap.offeredSkill);
+              if (skill?.cost) offSkillCost = skill.cost;
+            } catch (e) {}
+            
+            teacher.credits = Math.max(0, teacher.credits - offSkillCost);
+            learner.credits = learner.credits + offSkillCost;
+          }
+
+          await teacher.save();
+          await learner.save();
+          console.log(`🎉 Credits exchanged! Teacher: ${teacher.credits}, Learner: ${learner.credits}`);
         }
-
-        teacher.credits = (teacher.credits ?? 100) + skillCost;
-        await teacher.save();
-        console.log(`🎉 Teacher ${teacher.name} earned +${skillCost} credits for student enrollment! New balance: ${teacher.credits}`);
       }
     }
 
     // When course is marked completed:
-    if (status === 'completed' && previousStatus !== 'completed' && !swap.isLearnerOnly) {
+    if (status === 'completed' && previousStatus !== 'completed') {
       const teacherId = swap.provider;
-      const teacher = await User.findById(teacherId);
+      const teacher = teacherId ? await User.findById(teacherId) : null;
+      const learnerId = swap.requester;
+      const learner = await User.findById(learnerId);
 
       if (teacher) {
         const bonus = 15;
         teacher.credits = (teacher.credits ?? 100) + bonus;
         await teacher.save();
-        console.log(`🏆 Teacher ${teacher.name} earned +${bonus} completion bonus credits! New balance: ${teacher.credits}`);
+      }
+      if (!swap.isLearnerOnly && learner) {
+        const bonus = 15;
+        learner.credits = (learner.credits ?? 100) + bonus;
+        await learner.save();
       }
     }
 
     await swap.save();
+    
+    // Fetch the updated credits to return to the frontend
+    const updatedTeacher = swap.provider ? await User.findById(swap.provider) : null;
+    const updatedLearner = await User.findById(swap.requester);
+
     return res.json({
       message: status === 'accepted'
-        ? 'Swap accepted! Teacher earned credits for student enrollment.'
+        ? 'Swap accepted! Credits have been exchanged.'
         : status === 'completed'
-        ? 'Swap completed! Teacher earned +15 completion bonus credits.'
+        ? 'Swap completed! Completion bonus awarded.'
         : `Status updated to ${status}`,
       swap,
+      teacherCredits: updatedTeacher ? updatedTeacher.credits : undefined,
+      learnerCredits: updatedLearner ? updatedLearner.credits : undefined
     });
   } catch (err: any) {
     console.error('updateSwapStatus error:', err);
