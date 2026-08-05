@@ -34,7 +34,7 @@ export const createSwapRequest = async (req: AuthRequest, res: Response) => {
 
     const requester = await User.findById(requesterId);
     const onlyLearn = !!req.body.onlyLearn;
-    const providerId = onlyLearn ? null : (targetSkill?.user || targetUserId || req.body.providerId);
+    const providerId = targetSkill?.user || targetUserId || req.body.providerId;
     const provider = providerId ? await User.findById(providerId) : null;
 
     let offeredSkill = null;
