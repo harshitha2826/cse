@@ -15,9 +15,9 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
   ...props
 }) => {
   const sizeClasses = {
-    sm: 'px-6 py-3 text-xs rounded-lg',
-    md: 'px-8 py-4 text-sm rounded-xl',
-    lg: 'px-10 py-5 text-base rounded-xl',
+    sm: 'px-4 py-2 text-xs rounded-lg',
+    md: 'px-5 py-2.5 text-sm rounded-xl',
+    lg: 'px-6 py-3 text-base rounded-xl',
   };
 
   const variantClasses = {
@@ -28,7 +28,7 @@ export const GlowButton: React.FC<GlowButtonProps> = ({
 
   return (
     <button
-      className={`font-extrabold uppercase tracking-wider transition-all duration-500 cursor-pointer shadow-lg active:scale-92 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`font-bold uppercase tracking-wide transition-all duration-500 cursor-pointer shadow-lg active:scale-92 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}
